@@ -1,25 +1,25 @@
-﻿# Kubernetes
+# Kubernetes
 
-> âš ï¸ **Artefato legado**
+> ⚠️ **Artefato legado**
 >
-> Este diretÃ³rio/documentaÃ§Ã£o de Kubernetes foi preservado como referÃªncia histÃ³rica e para experimentaÃ§Ã£o/local.
+> Este diretório/documentação de Kubernetes foi preservado como referência histórica e para experimentação/local.
 >
-> **NÃ£o Ã© o caminho principal de deploy para a entrega final da Fase 4 na AWS** (ECR, ECS/Fargate, SQS, Lambda, CloudWatch e Terraform via repositÃ³rio de orquestraÃ§Ã£o).
+> **Não é o caminho principal de deploy para a entrega final da Fase 4 na AWS** (ECR, ECS/Fargate, SQS, Lambda, CloudWatch e Terraform via repositório de orquestração).
 
-Este documento descreve as configuraÃ§Ãµes e detalhes da orquestraÃ§Ã£o de containers utilizando Kubernetes para o serviÃ§o de `payments` da aplicaÃ§Ã£o de microsserviÃ§os desenvolvida na Fase 2 do Tech Challenge da FIAP.
+Este documento descreve as configurações e detalhes da orquestração de containers utilizando Kubernetes para o serviço de `payments` da aplicação de microsserviços desenvolvida na Fase 4 do Tech Challenge da FIAP.
 
-## Ãndice
-- ConfiguraÃ§Ãµes
+## Índice
+- Configurações
   - [Namespace](#namespace)
   - [External Names](#external-names)
   - [Payments](#payments)
-- [Comandos Ãšteis](#comandos-uteis)
+- [Comandos Úteis](#comandos-uteis)
 
-> AtenÃ§Ã£o! 
+> Atenção! 
 > 
-> Os manifestos de secrets `k8s\*-secret.yaml` nÃ£o estÃ£o incluÃ­dos no repositÃ³rio (e Ã© ignorado pelo `.gitignore`) por conter informaÃ§Ãµes sensÃ­veis, como senhas.
+> Os manifestos de secrets `k8s\*-secret.yaml` não estão incluídos no repositório (e é ignorado pelo `.gitignore`) por conter informações sensíveis, como senhas.
 > 
-> VocÃª pode copiar o seu respectivo arquivo de exemplo `k8s\templates\*-secret.yaml` e ajustar os valores.
+> Você pode copiar o seu respectivo arquivo de exemplo `k8s\templates\*-secret.yaml` e ajustar os valores.
 
 <a id="namespace"></a>
 ### Namespace
@@ -36,7 +36,7 @@ Este documento descreve as configuraÃ§Ãµes e detalhes da orquestraÃ§Ã£o 
 <a id="external-names"></a>
 ### External Names
 
-> Mapeia serviÃ§os externos (SQL Server, RabbitMQ, etc) para dentro do cluster Kubernetes usando `ExternalName`.
+> Mapeia serviços externos (SQL Server, RabbitMQ, etc) para dentro do cluster Kubernetes usando `ExternalName`.
 
 | Arquivo | `k8s\externalnames-service.yaml` |
 |---|---|
@@ -64,7 +64,7 @@ Este documento descreve as configuraÃ§Ãµes e detalhes da orquestraÃ§Ã£o 
 <a id="payments"></a>
 ### Payments
 
-A seguir estÃ£o as descriÃ§Ãµes dos manifestos relacionados ao serviÃ§o `payments` (configuraÃ§Ãµes, secrets, service e deployment).
+A seguir estão as descrições dos manifestos relacionados ao serviço `payments` (configurações, secrets, service e deployment).
 
 #### Secret
 
@@ -75,9 +75,9 @@ A seguir estÃ£o as descriÃ§Ãµes dos manifestos relacionados ao serviÃ§o 
 | metadata.name | `payments-secret` |
 | metadata.namespace | `fcg-apps` |
 | metadata.labels | `app: payments-api` |
-| type / data | `stringData` com placeholders para configuraÃ§Ãµes sensÃ­veis (credenciais RabbitMQ). |
+| type / data | `stringData` com placeholders para configurações sensíveis (credenciais RabbitMQ). |
 | Exemplos de chaves | `RabbitMq__UserName`, `RabbitMq__Password` |
-| ObservaÃ§Ã£o | NÃ£o commitar segredos reais no repositÃ³rio; copie o template e substitua valores antes de aplicar. |
+| Observação | Não commitar segredos reais no repositório; copie o template e substitua valores antes de aplicar. |
 
 #### ConfigMap
 
@@ -120,14 +120,14 @@ A seguir estÃ£o as descriÃ§Ãµes dos manifestos relacionados ao serviÃ§o 
 | template.spec.containers[0].image | `cloud-games-payments-svc:latest` |
 | template.spec.containers[0].imagePullPolicy | `IfNotPresent` |
 | template.spec.containers[0].ports | containerPort `8080` |
-| template.spec.containers[0].envFrom | - `configMapRef.name: payments-config` and `secretRef.name: payments-secret` (carrega variÃ¡veis de ambiente do ConfigMap e do Secret) |
+| template.spec.containers[0].envFrom | - `configMapRef.name: payments-config` and `secretRef.name: payments-secret` (carrega variáveis de ambiente do ConfigMap e do Secret) |
 | template.spec.containers[0].livenessProbe | httpGet `/health/live` porta `8080`, `initialDelaySeconds: 10`, `periodSeconds: 10` |
 | template.spec.containers[0].readinessProbe | httpGet `/health/ready` porta `8080`, `initialDelaySeconds: 5`, `periodSeconds: 10` |
 
 <a id="comandos-uteis"></a>
-### Comandos Ãšteis
+### Comandos Úteis
 
-- Build da imagem Docker (executar na raiz do repositÃ³rio):
+- Build da imagem Docker (executar na raiz do repositório):
   ```bash
   docker build -t cloud-games-payments-svc:latest .
   ```
@@ -142,7 +142,7 @@ A seguir estÃ£o as descriÃ§Ãµes dos manifestos relacionados ao serviÃ§o 
   kubectl apply -f k8s/payments-deployment.yaml
   ```
 
-- Verificar serviÃ§os:
+- Verificar serviços:
   ```bash
   kubectl get services -n fcg-apps
   ```
@@ -159,25 +159,25 @@ A seguir estÃ£o as descriÃ§Ãµes dos manifestos relacionados ao serviÃ§o 
   
 - Verificar logs de um pod:
   ```bash
-  ## Logs de um pod especÃ­fico:
+  ## Logs de um pod específico:
   kubectl logs <nome-do-pod> -n fcg-apps
   ## Logs de um deployment (pega o pod automaticamente):
   kubectl logs deployment/payments-deployment -n fcg-apps
   ## Logs em tempo real:
   kubectl logs -f <nome-do-pod> -n fcg-apps
-  ## Ãšltimas 100 linhas:
+  ## Últimas 100 linhas:
   kubectl logs <nome-do-pod> -n fcg-apps --tail=100
   ```
   
 - Acessar um pod via shell:
   ```bash
-  ## Acessar um pod especÃ­fico:
+  ## Acessar um pod específico:
   kubectl exec -it <nome-do-pod> -n fcg-apps -- /bin/bash
   ## Acessar pelo deployment (pega o pod automaticamente):
   kubectl exec -it deployment/payments-deployment -n fcg-apps -- /bin/bash
   ```
 
-- Resetar o deployment (forÃ§a reinÃ­cio):
+- Resetar o deployment (força reinício):
   ```bash
   kubectl rollout restart deployment/payments-deployment -n fcg-apps
   ```
