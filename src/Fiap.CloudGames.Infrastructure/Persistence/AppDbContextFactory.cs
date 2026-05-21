@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
@@ -12,7 +12,8 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .AddUserSecrets("dotnet-Fiap.CloudGames.Worker-1375e397-f35d-443d-89ff-5acf9a76fe31") // UserSecretsId do projeto Fiap.CloudGames.Worker
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+            ?? configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
