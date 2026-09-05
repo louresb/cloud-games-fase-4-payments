@@ -4,7 +4,7 @@ Microsservico responsavel pelo ciclo de pagamentos da plataforma FIAP Cloud Game
 
 ## Sumario
 
-- [Arquitetura AWS (Fase 4)](#arquitetura-aws-fase-3)
+- [Arquitetura AWS (Fase 4)](#arquitetura-aws-fase-4)
 - [Diagrama de Arquitetura](#diagrama-de-arquitetura)
 - [Fluxo Assincrono](#fluxo-assincrono)
 - [Responsabilidades do Microsservico](#responsabilidades-do-microsservico)
@@ -20,54 +20,48 @@ Microsservico responsavel pelo ciclo de pagamentos da plataforma FIAP Cloud Game
 
 ## Arquitetura AWS (Fase 4)
 
-A entrega da Fase 4 e executada integralmente em AWS, com deploy de servicos conteinerizados, mensageria assincrona e processamento orientado a eventos.
+A aplicacao principal e conteinerizada e o pipeline permite publicar a imagem no Amazon ECR e implanta-la no Amazon EKS. A integracao assincrona usa RabbitMQ com MassTransit. O repositorio tambem inclui um adaptador AWS Lambda para publicacao de eventos no Amazon SQS.
 
 Servicos AWS utilizados:
 
 - Amazon ECR para versionamento e armazenamento de imagens
-- Amazon ECS com Fargate para execucao do microsservico
-- Amazon SQS para filas e intercambio assincrono de mensagens
-- AWS Lambda para processamento de notificacoes orientadas a evento
-- Amazon CloudWatch para logs, metricas e observabilidade operacional
+- Amazon EKS para execucao do microsservico
+- RabbitMQ para filas e intercambio assincrono de mensagens
+- AWS Lambda e Amazon SQS como adaptador serverless opcional
+- Serilog, Loki e Grafana para logs e observabilidade
 - Terraform (via repositorio de orquestracao) para provisionamento de infraestrutura
 
 ---
 
 ## Diagrama de Arquitetura
 
-![Diagrama de Arquitetura AWS](https://raw.githubusercontent.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-orchestration-aws/main/docs/assets/architecture/payments-aws-architecture.png)
-
 ```mermaid
 flowchart LR
-    Client[API Gateway / Servicos de Dominio] --> ECS[Payments Service on ECS Fargate]
-    ECS --> SQL[(SQL Server)]
-    ECS --> SQS_CMD[SQS - payments.commands]
-    ECS --> SQS_EVT[SQS - catalog.events / notifications.events]
-    SQS_EVT --> LAMBDA[AWS Lambda - Notifications Processor]
-    ECS --> CW[Amazon CloudWatch Logs]
-    LAMBDA --> CW
+    Client[Catalog / Payment Gateway] --> EKS[Payments Worker/API on Amazon EKS]
+    EKS --> SQL[(SQL Server)]
+    EKS --> MQ_CMD[RabbitMQ - payments.commands]
+    EKS --> MQ_EVT[RabbitMQ - payment events]
+    MQ_EVT --> Consumers[Catalog / Notifications / Audit]
+    EKS --> Logs[Serilog / Loki]
 ```
 
 ---
 
 ## Fluxo Assincrono
 
-![Fluxo Assincrono SQS](https://raw.githubusercontent.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-orchestration-aws/main/docs/assets/architecture/payments-async-flow.png)
-
 ```mermaid
 sequenceDiagram
     participant Catalog as Catalog Service
-    participant SQSCommands as SQS payments.commands
+    participant Commands as RabbitMQ payments.commands
     participant Payments as Payments Service
-    participant SQSEvents as SQS catalog.events / notifications.events
-    participant Lambda as AWS Lambda Notifications
+    participant Events as RabbitMQ payment events
+    participant Notifications as Notifications Worker
 
-    Catalog->>SQSCommands: Publish Event (InitiatePaymentCommand)
-    Payments->>SQSCommands: Consume Message
+    Catalog->>Commands: Publish Event (InitiatePaymentCommand)
+    Payments->>Commands: Consume Message
     Payments->>Payments: Process Event (create transaction + payment link)
-    Payments->>SQSEvents: Publish Event (PaymentLinkGeneratedEvent)
-    Lambda->>SQSEvents: Consume Message
-    Lambda->>Lambda: Process Event (notification workflow)
+    Payments->>Events: Publish Event (PaymentLinkGeneratedEvent)
+    Events->>Notifications: Consume Message
 ```
 
 ---
@@ -90,14 +84,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Catalog as Catalog Service
-    participant SQSCommands as SQS payments.commands
+    participant Commands as RabbitMQ payments.commands
     participant Payments as Payments Service
-    participant SQSEvents as SQS catalog.events / notifications.events
+    participant Events as RabbitMQ payment events
 
-    Catalog->>SQSCommands: Publish Event (InitiatePaymentCommand)
-    Payments->>SQSCommands: Consume Message
+    Catalog->>Commands: Publish Event (InitiatePaymentCommand)
+    Payments->>Commands: Consume Message
     Payments->>Payments: Process Event (create payment + link)
-    Payments->>SQSEvents: Publish Event (PaymentLinkGeneratedEvent)
+    Payments->>Events: Publish Event (PaymentLinkGeneratedEvent)
 ```
 
 Entrada:
@@ -119,15 +113,15 @@ sequenceDiagram
     participant User as Usuario
     participant Gateway as Payment Gateway
     participant Payments as Payments Service
-    participant SQSEvents as SQS catalog.events / notifications.events
+    participant Events as RabbitMQ payment events
 
     User->>Gateway: Acessa link de pagamento
     Gateway->>Payments: POST /api/webhooks/gateway-notification
     Payments->>Payments: Process Event (update payment status)
     alt Pagamento aprovado
-        Payments->>SQSEvents: Publish Event (PaymentSucceededEvent)
+        Payments->>Events: Publish Event (PaymentSucceededEvent)
     else Pagamento rejeitado/cancelado
-        Payments->>SQSEvents: Publish Event (PaymentFailedEvent)
+        Payments->>Events: Publish Event (PaymentFailedEvent)
     end
 ```
 
@@ -142,17 +136,17 @@ Endpoint:
 ```mermaid
 sequenceDiagram
     participant Catalog as Catalog Service
-    participant SQSCommands as SQS payments.commands
+    participant Commands as RabbitMQ payments.commands
     participant Payments as Payments Service
-    participant SQSEvents as SQS catalog.events / notifications.events
+    participant Events as RabbitMQ payment events
 
-    Catalog->>SQSCommands: Publish Event (RefundPaymentCommand)
-    Payments->>SQSCommands: Consume Message
+    Catalog->>Commands: Publish Event (RefundPaymentCommand)
+    Payments->>Commands: Consume Message
     Payments->>Payments: Process Event (validate and refund)
     alt Estorno concluido
-        Payments->>SQSEvents: Publish Event (PaymentRefundedEvent)
+        Payments->>Events: Publish Event (PaymentRefundedEvent)
     else Erro no estorno
-        Payments->>SQSEvents: Publish Event (PaymentFailedEvent)
+        Payments->>Events: Publish Event (PaymentFailedEvent)
     end
 ```
 
@@ -174,7 +168,7 @@ Saida:
 ### Pre-requisitos
 
 - Git
-- .NET SDK 8+
+- .NET SDK 10
 - SQL Server acessivel para a aplicacao
 - dotnet-ef (restaurado via tool manifest)
 
@@ -183,7 +177,7 @@ Saida:
 1. Clonar o repositorio
 
    ```bash
-   git clone https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-payments.git
+   git clone https://github.com/louresb/cloud-games-fase-4-payments.git
    cd cloud-games-fase-4-payments
    ```
 
@@ -227,7 +221,7 @@ Saida:
 
 Provisionamento, pipelines e infraestrutura de execucao em AWS estao centralizados no repositorio de orquestracao:
 
-- https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-orchestration-aws
+- https://github.com/louresb/cloud-games-fase-4-orchestration-aws
 
 ---
 
@@ -265,17 +259,17 @@ Camadas:
 - Application: casos de uso, handlers, eventos e contratos de aplicacao
 - Domain: entidades, enums e contratos de dominio
 - Infrastructure: persistencia, integracoes externas e implementacoes tecnicas
-- Lambda: publicacao/processamento de eventos para notificacoes na arquitetura AWS
+- Lambda: adaptador opcional para publicacao de eventos no Amazon SQS
 
 ---
 
 ## Tecnologias Utilizadas
 
-- .NET 8 / ASP.NET Core
+- .NET 10 / ASP.NET Core
 - Entity Framework Core (SQL Server)
 - AWS SDK for .NET (SQS)
 - AWS Lambda (.NET)
-- Amazon ECS Fargate
+- Amazon EKS
 - Amazon ECR
 - Amazon SQS
 - Amazon CloudWatch
@@ -310,7 +304,8 @@ Camadas:
 
 ## Repositorios Relacionados
 
-- Orquestracao AWS: https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-orchestration-aws
-- Usuarios: https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-users
-- Catalogo: https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-catalog
-- Notificacoes: https://github.com/FIAP-10NETT-Grupo-30/cloud-games-fase-4-notifications
+- Orquestracao AWS: https://github.com/louresb/cloud-games-fase-4-orchestration-aws
+- Usuarios: https://github.com/louresb/cloud-games-fase-4-users
+- Catalogo: https://github.com/louresb/cloud-games-fase-4-catalog
+- Notificacoes: https://github.com/louresb/cloud-games-fase-4-notifications
+- Auditoria: https://github.com/louresb/cloud-games-fase-4-audit

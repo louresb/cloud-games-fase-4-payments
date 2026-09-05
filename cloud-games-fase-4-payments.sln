@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fiap.CloudGames.Infrastruct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fiap.CloudGames.Tests", "tests\Fiap.CloudGames.Tests\Fiap.CloudGames.Tests.csproj", "{4735E549-1BD2-4B13-B82F-618407B36624}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fiap.CloudGames.Payments.Lambda", "src\Fiap.CloudGames.Payments.Lambda\Fiap.CloudGames.Payments.Lambda.csproj", "{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{4735E549-1BD2-4B13-B82F-618407B36624}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4735E549-1BD2-4B13-B82F-618407B36624}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4735E549-1BD2-4B13-B82F-618407B36624}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E93D762F-848E-4A02-B48D-8A37459739C0} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
@@ -53,5 +59,6 @@ Global
 		{70C88D8A-D4C6-4C77-8E19-369B2E46D3FE} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{48DA201A-90B2-4ABB-88E5-3D7D3F89783D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{4735E549-1BD2-4B13-B82F-618407B36624} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{9F2E4D8A-6B41-4C3D-9A72-1E5F8B0C7D63} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
