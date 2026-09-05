@@ -11,7 +11,7 @@ internal sealed class SqsEventPublisher(IAmazonSQS sqsClient, ILogger logger) : 
     private readonly IAmazonSQS _sqsClient = sqsClient;
     private readonly ILogger _logger = logger;
 
-    public async Task PublishAsync<T>(T @event, CancellationToken ct) where T : class
+    public async Task PublishAsync<T>(T @event, CancellationToken ct, string? tenantId = null) where T : class
     {
         var queueUrl = Environment.GetEnvironmentVariable("PAYMENTS_NOTIFICATIONS_QUEUE_URL");
         if (string.IsNullOrWhiteSpace(queueUrl))
@@ -37,6 +37,15 @@ internal sealed class SqsEventPublisher(IAmazonSQS sqsClient, ILogger logger) : 
             {
                 DataType = "String",
                 StringValue = correlationId
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(tenantId))
+        {
+            messageAttributes["TenantId"] = new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = tenantId
             };
         }
 

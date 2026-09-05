@@ -1,10 +1,6 @@
 # Kubernetes
 
-> ⚠️ **Artefato legado**
->
-> Este diretório/documentação de Kubernetes foi preservado como referência histórica e para experimentação/local.
->
-> **Não é o caminho principal de deploy para a entrega final da Fase 4 na AWS** (ECR, ECS/Fargate, SQS, Lambda, CloudWatch e Terraform via repositório de orquestração).
+Estes manifests executam o serviço de pagamentos em Kubernetes e são usados pelo pipeline opcional de deploy no Amazon EKS.
 
 Este documento descreve as configurações e detalhes da orquestração de containers utilizando Kubernetes para o serviço de `payments` da aplicação de microsserviços desenvolvida na Fase 4 do Tech Challenge da FIAP.
 
@@ -186,4 +182,3 @@ A seguir estão as descrições dos manifestos relacionados ao serviço `payment
   ```bash
   kubectl delete namespace fcg-apps
   ```
-
